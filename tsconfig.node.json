@@ -1,0 +1,20 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "include": [
+    "electron.vite.config.*", 
+    "src/main/**/*", 
+    "src/preload/**/*",
+    "src/models/**/*",
+    "src/main/sequelize/**/*",
+       // Add this line to include files in the src/models folder
+  ],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "composite": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "noUnusedLocals": false,
+    "types": ["electron-vite/node"]
+  }
+}
