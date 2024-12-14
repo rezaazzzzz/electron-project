@@ -1,42 +1,44 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from "../main/sequelize/sequelize"
+import sequelize from "../main/sequelize/sequelize";
 
-class User extends Model {
-  public id!: number;
-  public fullName!: string;
-  public email!: string;
-  public password!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+class Product extends Model {
+  id(_id: any) {
+    throw new Error('Method not implemented.');
+  }
+
 }
 
-User.init(
+Product.init(
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true, 
     },
-    fullName: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true, 
+    details: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {},
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    select: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, 
+    },
+    order: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, 
     },
   },
   {
     sequelize,
-    modelName: 'User',
-    tableName: 'users',
-    timestamps: true, 
+    modelName: 'Product',
+    tableName: 'products',
+    timestamps: true,
   }
 );
 
-export default User;
+export default Product;

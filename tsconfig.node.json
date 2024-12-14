@@ -6,7 +6,6 @@
     "src/preload/**/*",
     "src/models/**/*",
     "src/main/sequelize/**/*",
-       // Add this line to include files in the src/models folder
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {

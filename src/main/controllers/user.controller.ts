@@ -34,34 +34,34 @@ export const userCreate = async (req: Request, res: Response): Promise<Response>
   }
 }
 
-export const Login = async (req: Request, res: Response): Promise<Response> => {
-  const { email, password } = req.body;
+// export const Login = async (req: Request, res: Response): Promise<Response> => {
+//   const { email, password } = req.body;
 
-  try {
-    const userExist = await User.findOne({ where: { email } });
+//   try {
+//     const userExist = await User.findOne({ where: { email } });
 
-    if (!userExist) {
-      return res.status(400).send('Email or password is incorrect');
-    }
+//     if (!userExist) {
+//       return res.status(400).send('Email or password is incorrect');
+//     }
 
-    const isMatch = await bcrypt.compare(userExist.password, password);
+//     const isMatch = await bcrypt.compare(userExist.password, password);
 
-    if (!isMatch) {
-      return res.status(400).send('Email or password is incorrect');
-    }
+//     if (!isMatch) {
+//       return res.status(400).send('Email or password is incorrect');
+//     }
 
-    const token = jwt.sign({ id: userExist.id }, process.env.SECRET_KEY!, {
-      expiresIn: '1h',
-    });
+//     const token = jwt.sign({ id: userExist.id }, process.env.SECRET_KEY!, {
+//       expiresIn: '1h',
+//     });
 
-    res.cookie('access_token', token, { httpOnly: true });
+//     res.cookie('access_token', token, { httpOnly: true });
 
-    return res.status(200).json({
-      message: 'Login successful',
-      token,
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send('Login error');
-  }
-};
+//     return res.status(200).json({
+//       message: 'Login successful',
+//       token,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).send('Login error');
+//   }
+// };

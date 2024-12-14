@@ -1,66 +1,39 @@
 import express from 'express';
-import fs from 'fs';
 import path from 'path';
-import { isProcessorValid } from './config2';
-import bcrypt from "bcrypt";
-import cookieParser from 'cookie-parser';
-import {Login, userCreate}  from './controllers/user.controller';
-import {createProduct,getProducts} from "./controllers/product.controller"
-
+import { engine } from 'express-handlebars';
+import { createProduct, findAllProduct,updateProductOrder } from './controllers/product.controller';
 
 
 const appExpress = express();
 appExpress.use(express.json());
+appExpress.use(express.urlencoded({ extended: true }));
+appExpress.engine('hbs', engine({
+  extname: 'hbs',
+  defaultLayout: false,  
+}));
+appExpress.set('view engine', 'hbs');
 
+const publicPath = path.resolve(__dirname, '..', '..', 'src', 'main', 'public');
+console.log("Public Directory:", publicPath);
 
-appExpress.post("/createUser", userCreate as any);
-appExpress.post("/login",Login as any)
+appExpress.use(express.static(publicPath));
 
+const viewsPath = path.resolve(__dirname, '..', '..', "src", 'main', 'views');
+console.log("Views Directory:", viewsPath);
 
-appExpress.post("/createProduct", createProduct as any);
-appExpress.get("/findAllProduct",getProducts as any);
+appExpress.set('views', viewsPath);
 
-appExpress.use(express.json());
- 
+appExpress.post('/createProduct', createProduct );
+appExpress.get('/findAllProduct', findAllProduct);
+appExpress.post('/api/update-product-order', updateProductOrder);
 
-appExpress.use(cookieParser());
-
-const filePath = 'C:\\Users\\Administrator\\Desktop\\electronnnnnn\\electron-app\\src\\app.txt';  
-
-appExpress.get('/', (_, res) => {
-  
-  if (!isProcessorValid()) {
-    res.status(403).send('<p>Access Denied: Invalid Processor ID.</p>');
-    console.error('Unauthorized access attempt.');
-    return;
-  }
-  
-  
-  try {
-    const file = fs.readFileSync(filePath, 'utf-8');
-    
-    if(!file){
-      const filePath = path.resolve(__dirname, 'app.txt'); 
-      const file = fs.readFileSync(filePath, 'utf-8');
-      
-      const hashfile = bcrypt.hashSync(file,10)
-      
-      
-        res.send(hashfile)
-         
-    }
-
-    res.send(file); 
-  } catch (err) {
-    console.error('Error reading file:', err);
-    res.status(500).send('<p>Cannot read the specified file.</p>');
-  }
+appExpress.get('/hello', (_, res) => {
+  const message = 'Hello, Handlebars World!';
+  res.render('index', { message: message });
 });
 
- 
 export function apprun() {
   appExpress.listen(3000, () => {
     console.log('Express server started on port 3000');
   });
 }
-

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/product.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script> <!-- SortableJS -->
+</head>
+<body>
+  <header>
+    <h1>My Application</h1>
+  </header>
+
+  <main>
+    <h2>Products List</h2>
+
+    <ul id="products-list">
+      {{#each products}}
+        <li class="product-item" data-id="{{this.id}}">
+          <h3>{{this.name}}</h3>
+          {{#if this.price}}<p>Price: ${{this.price}}</p>{{/if}}
+          {{#if this.image}}<img src="{{this.image}}" alt="{{this.name}}" />{{/if}}
+          {{#if this.description}}<p>Description: {{this.description}}</p>{{/if}}
+        </li>
+      {{/each}}
+    </ul>
+
+    <button id="save-order">Save Order</button>
+  </main>
+
+  <footer>
+    <p>© 2024 My Application</p>
+  </footer>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  const list = document.getElementById("products-list");
+
+  const sortable = new Sortable(list, {
+    animation: 150, 
+    ghostClass: "sortable-ghost", 
+  });
+
+  document.getElementById("save-order").addEventListener("click", async () => {
+    const reorderedIds = Array.from(list.children)
+      .map(item => item.dataset.id)
+      .filter(id => id !== ''); 
+
+    console.log("Reordered IDs:", reorderedIds); 
+    if (reorderedIds.length === 0) {
+      alert("No products to update.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/update-product-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reorderedIds }),
+      });
+
+      if (response.ok) {
+        alert("Order updated successfully!");
+      } else {
+        console.error("Failed to update order.");
+        alert("Failed to update order.");
+      }
+    } catch (error) {
+      console.error("Error updating order:", error);
+      alert("Error updating order.");
+    }
+  });
+});
+
+</script>
+
+
+</body>
+</html>

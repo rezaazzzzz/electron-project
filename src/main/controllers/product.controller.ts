@@ -1,24 +1,21 @@
 import express from "express";
 import Product from "../../models/product.model";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import User from "../../models/user.model";
-import cookieParser from "cookie-parser";
-import { Request, Response } from 'express'
+import { Request, Response } from "express";
+import sequelize from "../sequelize/sequelize";
 
-
-
-
-
-export const createProduct = async (req: Request, res: Response): Promise<Response> => {
+export const createProduct = async (req: Request, res: Response): Promise<void> => {
   const { name, price, description, image, select, order } = req.body;
 
   if (!name || !price) {
-    return res.status(400).json({ error: 'Name and Price are required' });
+    res.status(400).json({ error: "Name and Price are required" });
+    return;
   }
 
   try {
+    const isSelect = select === 'true' || select === true;
+
+    const orderValue = order !== undefined ? parseInt(order, 10) : null; // اگر order مقدار نداشته باشد، مقدار null می‌دهیم
+
     const productDetails = {
       price,
       description,
@@ -28,76 +25,77 @@ export const createProduct = async (req: Request, res: Response): Promise<Respon
     const newProduct = await Product.create({
       name,
       details: productDetails,
-      select: select || false, 
-      order: order || false, 
+      select: isSelect,
+      order: orderValue, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
-    return res.status(201).json({
-      message: 'Product created successfully',
+    res.status(201).json({
+      message: "Product created successfully",
       product: newProduct,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).send('Internal server error');
+    console.error("Error creating product:", err);
+    res.status(500).send("Internal server error");
   }
 };
 
-
-
-
-export const getProducts = async (req: Request, res: Response): Promise<Response> => {
-  const { showPrice, showImage } = req.query;
+export const findAllProduct = async (req: Request, res: Response): Promise<void> => {
+  const { showName, showPrice, showImage, showDescription } = req.query;
 
   try {
-    const products = await Product.findAll();
+    const [products] = await sequelize.query('SELECT * FROM products');
 
-    const formattedProducts = products.map((product) => {
-      const { name, details, select, order } = product;
+    const formattedProducts = (products as any[]).map((product) => {
+      const details = typeof product.details === 'string' ? JSON.parse(product.details) : product.details || {};
 
-      const price = select ? details.price : undefined;
-      const image = order ? details.image : undefined;
+      const productData: any = {};
 
-      return {
-        name,
-        price,
-        image,
-        description: details.description,
-      };
+      if (showName === 'true') productData.name = product.name;
+      if (showPrice === 'true' && details.price) productData.price = details.price;
+      if (showImage === 'true' && details.image) productData.image = details.image;
+      if (showDescription === 'true' && details.description) productData.description = details.description;
+
+      return productData;
     });
 
-    return res.status(200).json({
+    res.render('products', {
+      title: 'Products List',
       products: formattedProducts,
     });
+
   } catch (err) {
-    console.error(err);
-    return res.status(500).send('Internal server error');
+    console.error('Error retrieving products:', err);
+    res.status(500).send('Internal server error');
   }
 };
 
+export const updateProductOrder = async (req: Request, res: Response): Promise<void> => {
+  const { reorderedIds } = req.body;
 
+  console.log("Reordered product IDs received:", reorderedIds); 
 
-export const updateProduct = async (req: Request, res: Response): Promise<Response> => {
-  const { id } = req.params;
-  const { select, order } = req.body; 
+  if (!reorderedIds || reorderedIds.length === 0) {
+    res.status(400).json({ error: 'No product order provided.' });
+    return;
+  }
 
   try {
-    const product = await Product.findByPk(id);
-
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    product.select = select !== undefined ? select : product.select;
-    product.order = order !== undefined ? order : product.order;
-
-    await product.save();
-
-    return res.status(200).json({
-      message: 'Product updated successfully',
-      product,
+    const updatePromises = reorderedIds.map((id: string, index: number) => {
+      console.log(`Updating product ID: ${id} to order: ${index + 1}`); 
+      return Product.update(
+        { order: index + 1 },
+        { where: { id: id } }
+      );
     });
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({ message: 'Product order updated successfully.' });
   } catch (err) {
-    console.error(err);
-    return res.status(500).send('Internal server error');
+    console.error('Error updating product order:', err);
+    res.status(500).json({ error: 'Internal server error.' });
   }
 };
+
