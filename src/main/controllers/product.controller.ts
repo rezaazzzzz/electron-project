@@ -41,25 +41,36 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+
 export const findAllProduct = async (req: Request, res: Response): Promise<void> => {
   const { showName, showPrice, showImage, showDescription } = req.query;
 
   try {
     const [products] = await sequelize.query('SELECT * FROM products');
+    
+    console.log("Fetched Products:", products);
 
     const formattedProducts = (products as any[]).map((product) => {
       const details = typeof product.details === 'string' ? JSON.parse(product.details) : product.details || {};
 
       const productData: any = {};
 
+      // اطلاعات مربوط به محصول را در اینجا قرار می‌دهیم
       if (showName === 'true') productData.name = product.name;
       if (showPrice === 'true' && details.price) productData.price = details.price;
       if (showImage === 'true' && details.image) productData.image = details.image;
       if (showDescription === 'true' && details.description) productData.description = details.description;
 
+      // این خط برای اطمینان از اینکه id به درستی اضافه می‌شود
+      productData.id = product.id;
+
       return productData;
     });
 
+    // دوباره بررسی داده‌های فرمت‌شده در کنسول
+    console.log("Formatted Products:", formattedProducts);
+
+    // ارسال داده‌ها به قالب
     res.render('products', {
       title: 'Products List',
       products: formattedProducts,
@@ -71,19 +82,26 @@ export const findAllProduct = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
 export const updateProductOrder = async (req: Request, res: Response): Promise<void> => {
   const { reorderedIds } = req.body;
 
-  console.log("Reordered product IDs received:", reorderedIds); 
+  console.log(reorderedIds)
 
   if (!reorderedIds || reorderedIds.length === 0) {
     res.status(400).json({ error: 'No product order provided.' });
     return;
   }
 
+  const validIds = reorderedIds.filter((id: string) => !isNaN(Number(id)) && id.trim() !== "");
+
+  if (validIds.length === 0) {
+    res.status(400).json({ error: 'Invalid product IDs provided.' });
+    return;
+  }
+
   try {
-    const updatePromises = reorderedIds.map((id: string, index: number) => {
-      console.log(`Updating product ID: ${id} to order: ${index + 1}`); 
+    const updatePromises = validIds.map((id: string, index: number) => {
       return Product.update(
         { order: index + 1 },
         { where: { id: id } }
@@ -98,4 +116,3 @@ export const updateProductOrder = async (req: Request, res: Response): Promise<v
     res.status(500).json({ error: 'Internal server error.' });
   }
 };
-

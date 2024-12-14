@@ -25,7 +25,7 @@ appExpress.set('views', viewsPath);
 
 appExpress.post('/createProduct', createProduct );
 appExpress.get('/findAllProduct', findAllProduct);
-appExpress.post('/api/update-product-order', updateProductOrder);
+appExpress.post('/updateProductOrder', updateProductOrder);
 
 appExpress.get('/hello', (_, res) => {
   const message = 'Hello, Handlebars World!';
