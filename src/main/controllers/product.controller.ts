@@ -55,22 +55,18 @@ export const findAllProduct = async (req: Request, res: Response): Promise<void>
 
       const productData: any = {};
 
-      // اطلاعات مربوط به محصول را در اینجا قرار می‌دهیم
       if (showName === 'true') productData.name = product.name;
       if (showPrice === 'true' && details.price) productData.price = details.price;
       if (showImage === 'true' && details.image) productData.image = details.image;
       if (showDescription === 'true' && details.description) productData.description = details.description;
 
-      // این خط برای اطمینان از اینکه id به درستی اضافه می‌شود
       productData.id = product.id;
 
       return productData;
     });
 
-    // دوباره بررسی داده‌های فرمت‌شده در کنسول
     console.log("Formatted Products:", formattedProducts);
 
-    // ارسال داده‌ها به قالب
     res.render('products', {
       title: 'Products List',
       products: formattedProducts,

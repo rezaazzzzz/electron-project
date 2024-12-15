@@ -3,81 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{title}}</title>
-  <link rel="stylesheet" href="/product.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script> <!-- SortableJS -->
+  <title>Products</title>
+  <link rel="stylesheet" href="/product.css"> <!-- مسیر به فایل CSS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>My Application</h1>
+    <h1>Products</h1>
   </header>
 
   <main>
     <h2>Products List</h2>
-
     <ul id="products-list">
       {{#each products}}
         <li class="product-item" data-id="{{this.id}}">
           <h3>{{this.name}}</h3>
           {{#if this.price}}<p>Price: ${{this.price}}</p>{{/if}}
           {{#if this.image}}<img src="{{this.image}}" alt="{{this.name}}" />{{/if}}
-          {{#if this.description}}<p>Description: {{this.description}}</p>{{/if}}
+          {{#if this.description}}<p>{{this.description}}</p>{{/if}}
         </li>
       {{/each}}
     </ul>
-
-    <button id="save-order">Save Order</button>
   </main>
 
-  <footer>
-    <p>© 2024 My Application</p>
-  </footer>
-
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-  const list = document.getElementById("products-list");
+    document.addEventListener("DOMContentLoaded", () => {
+      const list = document.getElementById("products-list");
 
-  const sortable = new Sortable(list, {
-    animation: 150, 
-    ghostClass: "sortable-ghost", 
-  });
+      // فعال‌سازی قابلیت درگ و دراپ
+      const sortable = new Sortable(list, {
+        animation: 150,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        onEnd: async () => {
+          // به‌دست آوردن ID‌ها به ترتیب جدید
+          const reorderedIds = Array.from(list.children).map(item => item.dataset.id);
+          console.log("Reordered IDs:", reorderedIds);
 
-  document.getElementById("save-order").addEventListener("click", async () => {
-    const reorderedIds = Array.from(list.children)
-      .map(item => {
-        const id = item.dataset.id; 
-        console.log("Item data-id:", id);  
-        return id;  
-      })
-      .filter(id => id !== "id not get");  
-    console.log("Extracted IDs from list:", reorderedIds);  
+          // ارسال ترتیب جدید به سرور
+          try {
+            const response = await fetch("/updateProductOrder", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ reorderedIds }),
+            });
 
-    if (reorderedIds.length === 0) {
-      alert("No products to update.");
-      return;
-    }
-
-    try {
-      const response = await fetch("/updateProductOrder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+            if (!response.ok) {
+              console.error("Failed to update order.");
+            } else {
+              console.log("Order updated successfully!");
+            }
+          } catch (error) {
+            console.error("Error updating order:", error);
+          }
         },
-        body: JSON.stringify({ reorderedIds }),
       });
-
-      if (response.ok) {
-        alert("Order updated successfully!");
-      } else {
-        console.error("Failed to update order.");
-      }
-    } catch (error) {
-      console.error("Error updating order:", error);
-    }
-  });
-});
-
+    });
   </script>
-
 </body>
 </html>
